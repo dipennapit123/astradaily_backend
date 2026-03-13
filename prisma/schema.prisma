@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ZodiacSign {
+  ARIES
+  TAURUS
+  GEMINI
+  CANCER
+  LEO
+  VIRGO
+  LIBRA
+  SCORPIO
+  SAGITTARIUS
+  CAPRICORN
+  AQUARIUS
+  PISCES
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  EDITOR
+}
+
+enum UserActivityAction {
+  APP_OPEN
+  HOROSCOPE_VIEW
+  ZODIAC_SELECTED
+  SETTINGS_VIEW
+}
+
+model User {
+  id           String     @id @default(cuid())
+  clerkUserId  String     @unique
+  email        String     @unique
+  fullName     String?
+  avatarUrl    String?
+  zodiacSign   ZodiacSign?
+  timezone     String?    // IANA e.g. America/New_York for local reporting
+  lastActiveAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  activities   UserActivity[]
+}
+
+model UserActivity {
+  id         String            @id @default(cuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     UserActivityAction
+  sessionId  String?
+  platform   String?
+  appVersion String?
+  createdAt  DateTime          @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, action, createdAt])
+  @@index([action, createdAt])
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(EDITOR)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  horoscopesCreated Horoscope[] @relation("HoroscopeCreatedBy")
+  horoscopesUpdated Horoscope[] @relation("HoroscopeUpdatedBy")
+}
+
+model Horoscope {
+  id                 String      @id @default(cuid())
+  zodiacSign         ZodiacSign
+  date               DateTime
+  title              String
+  summary            String
+  wealthText         String
+  loveText           String
+  healthText         String
+  wealthConfidence   Int
+  loveConfidence     Int
+  healthConfidence   Int
+  wealthActionLabel  String?
+  loveActionLabel    String?
+  healthActionLabel  String?
+  weeklyOutlook      String?
+  isPublished        Boolean     @default(false)
+  createdById        String?
+  updatedById        String?
+  createdBy          Admin?      @relation("HoroscopeCreatedBy", fields: [createdById], references: [id])
+  updatedBy          Admin?      @relation("HoroscopeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([zodiacSign, date])
+}
