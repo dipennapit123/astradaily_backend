@@ -70,24 +70,32 @@ const generateSchema = z
   .partial()
   .passthrough();
 
-export const listHoroscopesHandler = async (req: Request, res: Response) => {
-  const page =
-    typeof req.query.page === "string" ? parseInt(req.query.page, 10) || 1 : 1;
-  const pageSize = 12;
-  const dateStr = req.query.date as string | undefined;
+export const listHoroscopesHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const page =
+      typeof req.query.page === "string" ? parseInt(req.query.page, 10) || 1 : 1;
+    const pageSize = 12;
+    const dateStr = req.query.date as string | undefined;
 
-  const data = await listHoroscopes({
-    zodiacSign: req.query.zodiacSign as any,
-    isPublished:
-      typeof req.query.isPublished === "string"
-        ? req.query.isPublished === "true"
-        : undefined,
-    search: req.query.search as string | undefined,
-    date: dateStr ? new Date(dateStr) : undefined,
-    page,
-    pageSize,
-  });
-  res.json({ success: true, data });
+    const data = await listHoroscopes({
+      zodiacSign: req.query.zodiacSign as any,
+      isPublished:
+        typeof req.query.isPublished === "string"
+          ? req.query.isPublished === "true"
+          : undefined,
+      search: req.query.search as string | undefined,
+      date: dateStr ? new Date(dateStr) : undefined,
+      page,
+      pageSize,
+    });
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const createHoroscopeHandler = async (
@@ -129,41 +137,63 @@ export const createHoroscopeHandler = async (
   }
 };
 
-export const updateHoroscopeHandler = async (req: Request, res: Response) => {
-  const parsed = baseHoroscopeSchema.partial().safeParse(req.body);
-  if (!parsed.success) {
-    throw new ApiError(400, "Invalid horoscope payload.");
+export const updateHoroscopeHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = baseHoroscopeSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      throw new ApiError(400, "Invalid horoscope payload.");
+    }
+
+    const { id } = req.params;
+    const payload = parsed.data;
+    const updated = await updateHoroscope(id, {
+      ...payload,
+      date: payload.date ? new Date(payload.date) : undefined,
+      zodiacSign: payload.zodiacSign as any,
+      updatedBy: undefined,
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    next(err);
   }
-
-  const { id } = req.params;
-  const adminId = req.admin?.adminId;
-
-  const payload = parsed.data;
-  const updated = await updateHoroscope(id, {
-    ...payload,
-    date: payload.date ? new Date(payload.date) : undefined,
-    zodiacSign: payload.zodiacSign as any,
-    updatedBy: adminId ? { connect: { id: adminId } } : undefined,
-  });
-
-  res.json({ success: true, data: updated });
 };
 
-export const deleteHoroscopeHandler = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  await deleteHoroscope(id);
-  res.status(204).send();
+export const deleteHoroscopeHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
+    await deleteHoroscope(id);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
 };
 
-export const publishHoroscopeHandler = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const isPublished =
-    typeof req.body.isPublished === "boolean"
-      ? req.body.isPublished
-      : req.body.isPublished === "true";
+export const publishHoroscopeHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
+    const isPublished =
+      typeof req.body.isPublished === "boolean"
+        ? req.body.isPublished
+        : req.body.isPublished === "true";
 
-  const updated = await publishHoroscope(id, isPublished);
-  res.json({ success: true, data: updated });
+    const updated = await publishHoroscope(id, isPublished);
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const generateHoroscopeHandler = async (
@@ -235,8 +265,16 @@ export const generateHoroscopeHandler = async (
   }
 };
 
-export const dashboardStatsHandler = async (_req: Request, res: Response) => {
-  const stats = await getDashboardStats();
-  res.json({ success: true, data: stats });
+export const dashboardStatsHandler = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const stats = await getDashboardStats();
+    res.json({ success: true, data: stats });
+  } catch (err) {
+    next(err);
+  }
 };
 
