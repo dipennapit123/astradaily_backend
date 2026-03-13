@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { requireAdmin } from "../../middlewares/adminAuth";
 import {
   createHoroscopeHandler,
   dashboardStatsHandler,
@@ -11,8 +10,6 @@ import {
 } from "./admin-horoscope.controller";
 
 export const adminHoroscopeRouter = Router();
-
-adminHoroscopeRouter.use(requireAdmin);
 
 adminHoroscopeRouter.get("/", listHoroscopesHandler);
 adminHoroscopeRouter.post("/", createHoroscopeHandler);

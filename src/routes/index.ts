@@ -2,7 +2,6 @@ import { Router } from "express";
 import { prisma } from "../utils/prisma";
 import { userRouter } from "../modules/user/user.routes";
 import { horoscopeRouter } from "../modules/horoscope/horoscope.routes";
-import { adminAuthRouter } from "../modules/admin/admin-auth.routes";
 import { adminHoroscopeRouter } from "../modules/admin/admin-horoscope.routes";
 import { adminUsersRouter } from "../modules/admin/admin-users.routes";
 
@@ -25,7 +24,6 @@ router.get("/health", async (_req, res) => {
 
 router.use("/users", userRouter);
 router.use("/horoscopes", horoscopeRouter);
-router.use("/admin/auth", adminAuthRouter);
 router.use("/admin/horoscopes", adminHoroscopeRouter);
 router.use("/admin/users", adminUsersRouter);
 
