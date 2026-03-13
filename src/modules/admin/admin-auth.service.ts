@@ -10,7 +10,23 @@ export const setupFirstAdmin = async (
   password: string,
   name: string,
 ) => {
-  const count = await prisma.admin.count();
+  if (!env.adminJwtSecret || env.adminJwtSecret === "changeme") {
+    throw new ApiError(
+      500,
+      "Server misconfiguration: ADMIN_JWT_SECRET is not set. Add it in Railway Variables.",
+    );
+  }
+
+  let count: number;
+  try {
+    count = await prisma.admin.count();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("connect") || msg.includes("Connection")) {
+      throw new ApiError(503, "Database unavailable. Check DATABASE_URL in Railway.");
+    }
+    throw err;
+  }
   if (count > 0) {
     throw new ApiError(403, "Admin already exists. Use the login page.");
   }
@@ -43,7 +59,24 @@ export const setupFirstAdmin = async (
 };
 
 export const loginAdmin = async (email: string, password: string) => {
-  const admin = await prisma.admin.findUnique({ where: { email } });
+  if (!env.adminJwtSecret || env.adminJwtSecret === "changeme") {
+    throw new ApiError(
+      500,
+      "Server misconfiguration: ADMIN_JWT_SECRET is not set. Add it in Railway Variables.",
+    );
+  }
+
+  let admin;
+  try {
+    admin = await prisma.admin.findUnique({ where: { email } });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("connect") || msg.includes("Connection")) {
+      throw new ApiError(503, "Database unavailable. Check DATABASE_URL in Railway.");
+    }
+    throw err;
+  }
+
   if (!admin) {
     throw new ApiError(401, "Invalid credentials.");
   }
