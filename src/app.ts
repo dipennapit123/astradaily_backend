@@ -8,11 +8,23 @@ import { errorHandler } from "./middlewares/errorHandler";
 export const createApp = () => {
   const app = express();
 
-  app.use(cors({ origin: "*", credentials: true }));
+  app.use(
+    cors({
+      origin: true, // reflect request origin (e.g. http://localhost:5173)
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    }),
+  );
   app.use(morgan("dev"));
   app.use(json());
 
   app.use("/api", router);
+
+  // 404 for unmatched routes (so response goes through CORS and has correct headers)
+  app.use((_req, res) => {
+    res.status(404).json({ success: false, error: { message: "Not found" } });
+  });
 
   app.use(errorHandler);
 
