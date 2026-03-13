@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { ApiError } from "../../middlewares/errorHandler";
 import {
@@ -90,36 +90,43 @@ export const listHoroscopesHandler = async (req: Request, res: Response) => {
   res.json({ success: true, data });
 };
 
-export const createHoroscopeHandler = async (req: Request, res: Response) => {
-  const parsed = baseHoroscopeSchema.safeParse(req.body);
-  if (!parsed.success) {
-    throw new ApiError(400, "Invalid horoscope payload.");
+export const createHoroscopeHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = baseHoroscopeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ApiError(400, "Invalid horoscope payload.");
+    }
+
+    const data = parsed.data;
+
+    const created = await createHoroscope({
+      zodiacSign: data.zodiacSign as any,
+      date: new Date(data.date),
+      title: data.title,
+      summary: data.summary,
+      wealthText: data.wealthText,
+      loveText: data.loveText,
+      healthText: data.healthText,
+      wealthConfidence: data.wealthConfidence,
+      loveConfidence: data.loveConfidence,
+      healthConfidence: data.healthConfidence,
+      wealthActionLabel: data.wealthActionLabel,
+      loveActionLabel: data.loveActionLabel,
+      healthActionLabel: data.healthActionLabel,
+      weeklyOutlook: data.weeklyOutlook,
+      isPublished: data.isPublished ?? false,
+      createdBy: undefined,
+      updatedBy: undefined,
+    });
+
+    res.status(201).json({ success: true, data: created });
+  } catch (err) {
+    next(err);
   }
-
-  const adminId = req.admin?.adminId;
-  const data = parsed.data;
-
-  const created = await createHoroscope({
-    zodiacSign: data.zodiacSign as any,
-    date: new Date(data.date),
-    title: data.title,
-    summary: data.summary,
-    wealthText: data.wealthText,
-    loveText: data.loveText,
-    healthText: data.healthText,
-    wealthConfidence: data.wealthConfidence,
-    loveConfidence: data.loveConfidence,
-    healthConfidence: data.healthConfidence,
-    wealthActionLabel: data.wealthActionLabel,
-    loveActionLabel: data.loveActionLabel,
-    healthActionLabel: data.healthActionLabel,
-    weeklyOutlook: data.weeklyOutlook,
-    isPublished: data.isPublished ?? false,
-    createdBy: adminId ? { connect: { id: adminId } } : undefined,
-    updatedBy: adminId ? { connect: { id: adminId } } : undefined,
-  });
-
-  res.status(201).json({ success: true, data: created });
 };
 
 export const updateHoroscopeHandler = async (req: Request, res: Response) => {
@@ -162,69 +169,70 @@ export const publishHoroscopeHandler = async (req: Request, res: Response) => {
 export const generateHoroscopeHandler = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ) => {
-  const parsed = generateSchema.safeParse(req.body);
-  if (!parsed.success) {
-    // Log detailed validation error but do not block generation for admins
-    // eslint-disable-next-line no-console
-    console.error("[generateHoroscope] Invalid payload", parsed.error);
-  }
-
-  const body = (parsed.success ? parsed.data : req.body) as any;
-
-  const zodiacSign = body.zodiacSign as
-    | (typeof generateSchema extends any ? string : never)
-    | undefined;
-  const allZodiacsRaw = body.allZodiacs as boolean | string | undefined;
-  const allZodiacs =
-    typeof allZodiacsRaw === "boolean"
-      ? allZodiacsRaw
-      : allZodiacsRaw === "true" || allZodiacsRaw === "on";
-  const date = body.date as string | undefined;
-  // Tone is now driven by the backend prompt; default to premium if not provided
-  const tone = (body.tone as
-    | "mystical"
-    | "modern"
-    | "friendly"
-    | "premium"
-    | undefined) ?? "premium";
-  const notes = body.notes as string | undefined;
-  const targetZodiacs =
-    allZodiacs || !zodiacSign
-      ? ([
-          "ARIES",
-          "TAURUS",
-          "GEMINI",
-          "CANCER",
-          "LEO",
-          "VIRGO",
-          "LIBRA",
-          "SCORPIO",
-          "SAGITTARIUS",
-          "CAPRICORN",
-          "AQUARIUS",
-          "PISCES",
-        ] as const)
-      : [zodiacSign];
-
-  // Generate one sign at a time so each request is distinct and content varies per sign
-  const generated: Array<{ zodiacSign: typeof targetZodiacs[number]; [key: string]: any }> = [];
-  const dateToUse = date ? new Date(date) : new Date();
-  for (const z of targetZodiacs) {
-    const content = await generateHoroscope({
-      zodiacSign: z as any,
-      date: dateToUse,
-      tone,
-      notes,
-    });
-    generated.push({ zodiacSign: z, ...content });
-    // Short delay between calls to encourage varied Gemini output per sign
-    if (targetZodiacs.length > 1) {
-      await new Promise((r) => setTimeout(r, 300));
+  try {
+    const parsed = generateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      // eslint-disable-next-line no-console
+      console.error("[generateHoroscope] Invalid payload", parsed.error);
     }
-  }
 
-  res.json({ success: true, data: generated });
+    const body = (parsed.success ? parsed.data : req.body) as any;
+
+    const zodiacSign = body.zodiacSign as
+      | (typeof generateSchema extends any ? string : never)
+      | undefined;
+    const allZodiacsRaw = body.allZodiacs as boolean | string | undefined;
+    const allZodiacs =
+      typeof allZodiacsRaw === "boolean"
+        ? allZodiacsRaw
+        : allZodiacsRaw === "true" || allZodiacsRaw === "on";
+    const date = body.date as string | undefined;
+    const tone = (body.tone as
+      | "mystical"
+      | "modern"
+      | "friendly"
+      | "premium"
+      | undefined) ?? "premium";
+    const notes = body.notes as string | undefined;
+    const targetZodiacs =
+      allZodiacs || !zodiacSign
+        ? ([
+            "ARIES",
+            "TAURUS",
+            "GEMINI",
+            "CANCER",
+            "LEO",
+            "VIRGO",
+            "LIBRA",
+            "SCORPIO",
+            "SAGITTARIUS",
+            "CAPRICORN",
+            "AQUARIUS",
+            "PISCES",
+          ] as const)
+        : [zodiacSign];
+
+    const generated: Array<{ zodiacSign: typeof targetZodiacs[number]; [key: string]: any }> = [];
+    const dateToUse = date ? new Date(date) : new Date();
+    for (const z of targetZodiacs) {
+      const content = await generateHoroscope({
+        zodiacSign: z as any,
+        date: dateToUse,
+        tone,
+        notes,
+      });
+      generated.push({ zodiacSign: z, ...content });
+      if (targetZodiacs.length > 1) {
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    }
+
+    res.json({ success: true, data: generated });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const dashboardStatsHandler = async (_req: Request, res: Response) => {
