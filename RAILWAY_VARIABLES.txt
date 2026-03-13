@@ -1,0 +1,36 @@
+# Railway backend variables – copy/paste and replace placeholders
+# ================================================================
+#
+# DATABASE: You need a real PostgreSQL database. Two options:
+#
+#   A) Use Railway's PostgreSQL (recommended):
+#      - In the same Railway project: New → Database → PostgreSQL.
+#      - Then in your backend service: Variables → "Link variable" → pick
+#        DATABASE_URL from the PostgreSQL service. Do NOT paste a value here.
+#
+#   B) Use an external Postgres (Supabase, Neon, etc.):
+#      - Paste that connection string as DATABASE_URL below.
+#
+# Prisma is only the ORM in your backend – it connects TO a database.
+# There is no "Prisma database service" to link; you need a Postgres instance.
+#
+# COPY FROM .ENV: You can copy variable *names* and reuse *values* for
+# CLERK_*, GROQ_API_KEY, GEMINI_API_KEY, ADMIN_JWT_SECRET if you use the
+# same keys in production. Use Railway's DATABASE_URL (or your external
+# Postgres URL), not your local .env DATABASE_URL.
+#
+# ================================================================
+#
+# If you use Railway Postgres: do NOT add DATABASE_URL here – link it from the DB service.
+# If you use external Postgres: add this line with your connection string:
+# DATABASE_URL=postgresql://user:pass@host:5432/dbname
+#
+# ================================================================
+
+NODE_ENV=production
+PORT=4000
+CLERK_JWT_ISSUER=https://YOUR_APP.clerk.accounts.dev
+CLERK_JWT_AUDIENCE=
+ADMIN_JWT_SECRET=REPLACE_WITH_LONG_RANDOM_STRING
+GROQ_API_KEY=gsk_YOUR_GROQ_KEY
+GEMINI_API_KEY=

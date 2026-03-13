@@ -37,11 +37,27 @@ In the service **Settings**:
 2. After it’s created, open the PostgreSQL service → **Variables** (or **Connect**).
 3. Copy the **`DATABASE_URL`** value (or note that Railway can inject it when you link the service).
 
-## 5. Link database and set variables
+## 5. Link database and set variables (Clerk, database, Groq)
 
 1. In your **backend service** → **Variables**.
 2. Click **Add variable** or **Link variable** and link the Postgres **`DATABASE_URL`** from the database service (Railway can add it automatically when you use “Link”).
-3. Add the rest of the variables:
+3. Add the variables below (paste into Railway Variables raw editor, or add one by one; replace placeholders):
+
+```
+NODE_ENV=production
+PORT=4000
+CLERK_JWT_ISSUER=https://YOUR_APP.clerk.accounts.dev
+CLERK_JWT_AUDIENCE=
+ADMIN_JWT_SECRET=REPLACE_WITH_LONG_RANDOM_STRING
+GROQ_API_KEY=gsk_YOUR_GROQ_KEY
+GEMINI_API_KEY=
+```
+
+- **CLERK_JWT_ISSUER:** Clerk Dashboard → API Keys → Frontend API URL.
+- **ADMIN_JWT_SECRET:** Run `openssl rand -base64 32` and paste the output.
+- **GROQ_API_KEY:** From [Groq Console](https://console.groq.com).
+
+4. Reference (all variable names):
 
 | Variable | Example / notes |
 |----------|------------------|
@@ -53,7 +69,7 @@ In the service **Settings**:
 | `GROQ_API_KEY` | Your Groq API key (if used) |
 | `GEMINI_API_KEY` | Your Gemini API key (if used) |
 
-Leave **DATABASE_URL** to the linked Postgres service if you linked it; otherwise paste the connection string from the Postgres variables.
+**Clerk:** Set `CLERK_JWT_ISSUER` to your Clerk Frontend API URL (e.g. `https://xxx.clerk.accounts.dev` from Clerk Dashboard → API Keys). The backend verifies mobile JWTs via this URL’s `/.well-known/jwks.json`. **Groq:** Set `GROQ_API_KEY` (from [Groq Console](https://console.groq.com)) so the backend uses Groq for horoscope generation. Leave **DATABASE_URL** to the linked Postgres service if you linked it; otherwise paste the connection string from the Postgres variables.
 
 ## 6. Deploy and get URL
 
