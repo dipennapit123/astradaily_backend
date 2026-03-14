@@ -1,32 +1,33 @@
-import { prisma } from "../../utils/prisma";
-import type { ZodiacSign } from "../../generated/client";
+import { query } from "../../db";
+import type { ZodiacSign } from "../../types";
 
 export const getLatestHoroscopeForZodiac = async (zodiac: ZodiacSign) => {
-  return prisma.horoscope.findFirst({
-    where: { zodiacSign: zodiac, isPublished: true },
-    orderBy: { date: "desc" },
-  });
+  const r = await query(
+    `SELECT * FROM "Horoscope"
+     WHERE "zodiacSign" = $1 AND "isPublished" = true
+     ORDER BY date DESC LIMIT 1`,
+    [zodiac],
+  );
+  return r.rows[0] ?? null;
 };
 
 export const getHoroscopeHistoryForZodiac = async (
   zodiac: ZodiacSign,
   limit = 30,
 ) => {
-  const published = await prisma.horoscope.findMany({
-    where: { zodiacSign: zodiac, isPublished: true },
-    orderBy: { date: "desc" },
-    take: limit,
-  });
+  const published = await query(
+    `SELECT * FROM "Horoscope"
+     WHERE "zodiacSign" = $1 AND "isPublished" = true
+     ORDER BY date DESC LIMIT $2`,
+    [zodiac, limit],
+  );
+  if (published.rows.length > 0) return published.rows;
 
-  // If nothing has been formally published yet, fall back to any drafts
-  if (published.length === 0) {
-    return prisma.horoscope.findMany({
-      where: { zodiacSign: zodiac },
-      orderBy: { date: "desc" },
-      take: limit,
-    });
-  }
-
-  return published;
+  const drafts = await query(
+    `SELECT * FROM "Horoscope"
+     WHERE "zodiacSign" = $1
+     ORDER BY date DESC LIMIT $2`,
+    [zodiac, limit],
+  );
+  return drafts.rows;
 };
-

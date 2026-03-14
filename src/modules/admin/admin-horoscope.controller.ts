@@ -154,7 +154,6 @@ export const updateHoroscopeHandler = async (
       ...payload,
       date: payload.date ? new Date(payload.date) : undefined,
       zodiacSign: payload.zodiacSign as any,
-      updatedBy: undefined,
     });
 
     res.json({ success: true, data: updated });

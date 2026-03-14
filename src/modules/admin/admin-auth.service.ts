@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "../../utils/prisma";
+import { randomUUID } from "crypto";
+import { query } from "../../db";
+import type { AdminRow } from "../../types";
 import { env } from "../../config/env";
 import { ApiError } from "../../middlewares/errorHandler";
 
@@ -19,7 +21,10 @@ export const setupFirstAdmin = async (
 
   let count: number;
   try {
-    count = await prisma.admin.count();
+    const r = await query<{ count: string }>(
+      'SELECT COUNT(*)::text as count FROM "Admin"',
+    );
+    count = parseInt(r.rows[0]?.count ?? "0", 10);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("connect") || msg.includes("Connection")) {
@@ -32,17 +37,15 @@ export const setupFirstAdmin = async (
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const admin = await prisma.admin.create({
-    data: {
-      email,
-      passwordHash,
-      name: name || "Admin",
-      role: "SUPER_ADMIN",
-    },
-  });
+  const id = randomUUID();
+  await query(
+    `INSERT INTO "Admin" (id, name, email, "passwordHash", role)
+     VALUES ($1, $2, $3, $4, 'SUPER_ADMIN')`,
+    [id, name || "Admin", email, passwordHash],
+  );
 
   const token = jwt.sign(
-    { adminId: admin.id, role: admin.role },
+    { adminId: id, role: "SUPER_ADMIN" },
     env.adminJwtSecret,
     { expiresIn: "7d" },
   );
@@ -50,10 +53,10 @@ export const setupFirstAdmin = async (
   return {
     token,
     admin: {
-      id: admin.id,
-      name: admin.name,
-      email: admin.email,
-      role: admin.role,
+      id,
+      name: name || "Admin",
+      email,
+      role: "SUPER_ADMIN" as const,
     },
   };
 };
@@ -66,9 +69,14 @@ export const loginAdmin = async (email: string, password: string) => {
     );
   }
 
-  let admin;
+  let rows: AdminRow[];
   try {
-    admin = await prisma.admin.findUnique({ where: { email } });
+    const r = await query<AdminRow>(
+      `SELECT id, name, email, "passwordHash", role, "createdAt", "updatedAt"
+       FROM "Admin" WHERE email = $1`,
+      [email],
+    );
+    rows = r.rows;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("connect") || msg.includes("Connection")) {
@@ -77,6 +85,7 @@ export const loginAdmin = async (email: string, password: string) => {
     throw err;
   }
 
+  const admin = rows[0];
   if (!admin) {
     throw new ApiError(401, "Invalid credentials.");
   }
@@ -102,4 +111,3 @@ export const loginAdmin = async (email: string, password: string) => {
     },
   };
 };
-

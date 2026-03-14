@@ -28,7 +28,7 @@ const hasDbUrl =
   process.env.POSTGRES_URL;
 if (!hasDbUrl) {
   // eslint-disable-next-line no-console
-  console.warn("DATABASE_URL (or POSTGRES_URL) is not set. Set it in Railway → Backend → Variables. Prisma will fail to connect.");
+  console.warn("DATABASE_URL (or POSTGRES_URL) is not set. Set it in Railway → Backend → Variables. Database will not connect.");
 } else {
   // eslint-disable-next-line no-console
   console.log("[env] Database URL is set.");

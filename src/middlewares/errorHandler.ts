@@ -20,15 +20,15 @@ export const errorHandler = (
   let message =
     err instanceof Error ? err.message : "Unexpected server error.";
 
-  // Prisma ECONNREFUSED = database unreachable (DATABASE_URL wrong or Postgres not running)
-  if ((err as any)?.code === "ECONNREFUSED" || (err as any)?.code === "P1001") {
+  // ECONNREFUSED = database unreachable (DATABASE_URL wrong or Postgres not running)
+  if ((err as any)?.code === "ECONNREFUSED") {
     status = 503;
     message =
       "Database connection refused. On Railway: set DATABASE_URL on the backend service (link from Postgres) and ensure Postgres is running.";
-  } else if ((err as any)?.meta?.target || (err as any)?.code) {
-    const prismaMsg = (err as any).message;
-    if (typeof prismaMsg === "string" && prismaMsg.length < 300) {
-      message = prismaMsg;
+  } else {
+    const errMsg = (err as Error)?.message;
+    if (typeof errMsg === "string" && errMsg.length < 300) {
+      message = errMsg;
     }
   }
 

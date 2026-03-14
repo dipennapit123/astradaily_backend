@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "../utils/prisma";
+import { ping } from "../db";
 import { userRouter } from "../modules/user/user.routes";
 import { horoscopeRouter } from "../modules/horoscope/horoscope.routes";
 import { adminHoroscopeRouter } from "../modules/admin/admin-horoscope.routes";
@@ -11,7 +11,7 @@ export const router = Router();
 router.get("/health", async (_req, res) => {
   let database: "connected" | "disconnected" = "disconnected";
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    await ping();
     database = "connected";
   } catch {
     // leave database as disconnected

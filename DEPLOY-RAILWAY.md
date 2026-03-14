@@ -27,11 +27,11 @@ In the service **Settings**:
 
 - **Build Command:**  
   `npm install && npm run build`  
-  (postinstall runs `prisma generate`; build runs `tsc`)
+  (build runs `tsc`)
 
 - **Start Command:**  
-  `npx prisma migrate deploy && node dist/server.js`  
-  (runs migrations then starts the server; do not use `prisma migrate dev` in production)
+  `node dist/server.js`  
+  (Run the schema once: `npm run db:migrate` with `DATABASE_URL` set, or run `sql/schema.sql` manually in your Postgres client.)
 
 ## 4. Add PostgreSQL
 
@@ -98,7 +98,7 @@ GEMINI_API_KEY=
 From your machine (with `DATABASE_URL` pointing at Railway Postgres), in the backend repo root:
 
 ```bash
-npx prisma migrate deploy
+npm run db:migrate
 ```
 
 Or use Railway’s **Shell** for the backend service and run the same command there.

@@ -1,6 +1,6 @@
 # Connect pgAdmin to Railway Postgres
 
-You can use **pgAdmin** to view and edit your AstraDaily database while the backend keeps using Prisma. Both connect to the same PostgreSQL instance.
+You can use **pgAdmin** to view and edit your AstraDaily database. The backend uses direct PostgreSQL (the `pg` package); pgAdmin connects to the same database.
 
 ## 1. Get the connection details from Railway
 
@@ -40,4 +40,4 @@ You can use **pgAdmin** to view and edit your AstraDaily database while the back
 - You’ll see tables such as **User**, **Admin**, **Horoscope**, **UserActivity**.
 - Right-click a table → **View/Edit Data** → **All Rows** to view or edit.
 
-Your backend continues to use Prisma; pgAdmin is just another client to the same database.
+Your backend uses the `pg` driver; pgAdmin is another client to the same database.

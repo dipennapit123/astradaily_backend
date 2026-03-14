@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { ApiError } from "../../middlewares/errorHandler";
-import { prisma } from "../../utils/prisma";
+import type { ZodiacSign } from "../../types";
+import { getCurrentUser } from "../user/user.service";
 import {
   getHoroscopeHistoryForZodiac,
   getLatestHoroscopeForZodiac,
@@ -11,15 +12,14 @@ export const getTodayHoroscopeHandler = async (req: Request, res: Response) => {
     throw new ApiError(401, "Unauthenticated.");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: req.userId },
-  });
+  const user = await getCurrentUser(req.userId);
+  const zodiacSign = user && (user as { zodiacSign?: string }).zodiacSign;
 
-  if (!user?.zodiacSign) {
+  if (!zodiacSign) {
     throw new ApiError(400, "User zodiac sign not set.");
   }
 
-  const latest = await getLatestHoroscopeForZodiac(user.zodiacSign);
+  const latest = await getLatestHoroscopeForZodiac(zodiacSign as ZodiacSign);
 
   if (!latest) {
     return res.json({
@@ -37,15 +37,14 @@ export const getHistoryHandler = async (req: Request, res: Response) => {
     throw new ApiError(401, "Unauthenticated.");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: req.userId },
-  });
+  const user = await getCurrentUser(req.userId);
+  const zodiacSign = user && (user as { zodiacSign?: string }).zodiacSign;
 
-  if (!user?.zodiacSign) {
+  if (!zodiacSign) {
     throw new ApiError(400, "User zodiac sign not set.");
   }
 
-  const history = await getHoroscopeHistoryForZodiac(user.zodiacSign);
+  const history = await getHoroscopeHistoryForZodiac(zodiacSign as ZodiacSign);
   res.json({ success: true, data: history });
 };
 

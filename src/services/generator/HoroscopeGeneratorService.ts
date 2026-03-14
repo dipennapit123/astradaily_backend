@@ -1,4 +1,4 @@
-import type { ZodiacSign } from "../../generated/client";
+import type { ZodiacSign } from "../../types";
 
 export type HoroscopeTone = "mystical" | "modern" | "friendly" | "premium";
 
