@@ -7,7 +7,7 @@ import { adminUsersRouter } from "../modules/admin/admin-users.routes";
 
 export const router = Router();
 
-/** Health check: verifies API and optional DB connection. GET /api/health */
+/** Health check: verifies API and DB. GET /api/health — when database is "connected", user data is available. */
 router.get("/health", async (_req, res) => {
   let database: "connected" | "disconnected" = "disconnected";
   try {
@@ -18,7 +18,14 @@ router.get("/health", async (_req, res) => {
   }
   res.json({
     success: true,
-    data: { status: "ok", database },
+    data: {
+      status: "ok",
+      database,
+      message:
+        database === "connected"
+          ? "Database connected; horoscopes and user data will be served."
+          : "Database not connected; set DATABASE_URL and ensure Postgres is running.",
+    },
   });
 });
 

@@ -42,7 +42,7 @@ In the service **Settings**:
 ## 5. Link database and set variables (Clerk, database, Groq)
 
 1. In your **backend service** → **Variables**.
-2. Click **Add variable** or **Link variable** and link the Postgres **`DATABASE_URL`** from the database service (Railway can add it automatically when you use “Link”).
+2. **Database:** Set **`DATABASE_URL`** (full URL) **or** **`DB_USER`**, **`DB_PASSWORD`**, **`DB_HOST`**, **`DB_PORT`**, **`DB_NAME`** from the Postgres service; the app prefers the user/password method when set. Click **Add variable** or **Link variable** and link the Postgres **`DATABASE_URL`** from the database service (Railway can add it automatically when you use “Link”).
 3. Add the variables below (paste into Railway Variables raw editor, or add one by one; replace placeholders):
 
 ```

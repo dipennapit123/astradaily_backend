@@ -28,7 +28,7 @@ app.listen(PORT, () => {
   ping()
     .then(() => {
       // eslint-disable-next-line no-console
-      console.log("[db] Connection OK");
+      console.log("[db] Connection OK — database ready, API will serve user data.");
     })
     .catch((err: unknown) => {
       // eslint-disable-next-line no-console
