@@ -1,4 +1,15 @@
 import "dotenv/config";
+
+// Log env state immediately so Railway logs show what the process sees
+const hasDbUrl = !!(
+  process.env.DATABASE_URL ||
+  process.env.SUPABASE_DB_URL ||
+  process.env.DATABASE_PRIVATE_URL ||
+  process.env.POSTGRES_URL
+);
+// eslint-disable-next-line no-console
+console.log(`[startup] DATABASE_URL or SUPABASE_DB_URL: ${hasDbUrl ? "set" : "NOT SET"}`);
+
 import { createApp } from "./app";
 import { getDatabaseUrl, ping, pool } from "./db";
 
@@ -13,7 +24,7 @@ app.listen(PORT, () => {
   if (!dbUrl || !pool) {
     // eslint-disable-next-line no-console
     console.error(
-      "[db] DATABASE_URL is empty. Set it in Railway → Backend service → Variables (e.g. link from Postgres)."
+      "[db] No database URL. In Railway: Backend service → Variables → add DATABASE_URL with your Supabase URL (password: use %40 for @)."
     );
     return;
   }
