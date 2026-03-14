@@ -51,20 +51,24 @@ export function getDatabaseUrl(): string {
   return buildUrlFromParts();
 }
 
-const connectionString = getDatabaseUrl();
-const isPlaceholder =
-  !connectionString || connectionString === "postgresql://localhost:5432/placeholder";
+let _pool: Pool | null = null;
 
-export const pool: Pool | null = !isPlaceholder
-  ? new Pool({ connectionString, max: 10 })
-  : null;
+/** Create pool on first use so env (e.g. DATABASE_URL on Railway) is read at request time. */
+export function getPool(): Pool | null {
+  if (_pool) return _pool;
+  const url = getDatabaseUrl();
+  if (!url || url === "postgresql://localhost:5432/placeholder") return null;
+  _pool = new Pool({ connectionString: url, max: 10 });
+  return _pool;
+}
 
 export async function query<T = unknown>(
   text: string,
   values?: unknown[],
 ): Promise<{ rows: T[]; rowCount: number }> {
-  if (!pool) throw new Error("Database not configured: set DATABASE_URL or DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME.");
-  const result = await pool.query(text, values);
+  const p = getPool();
+  if (!p) throw new Error("Database not configured: set DATABASE_URL or DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME.");
+  const result = await p.query(text, values);
   return { rows: (result.rows as T[]), rowCount: result.rowCount ?? 0 };
 }
 

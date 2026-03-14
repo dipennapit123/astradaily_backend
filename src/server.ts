@@ -11,17 +11,17 @@ const hasDbUrl = !!(
 console.log(`[startup] DATABASE_URL or SUPABASE_DB_URL: ${hasDbUrl ? "set" : "NOT SET"}`);
 
 import { createApp } from "./app";
-import { getDatabaseUrl, ping, pool } from "./db";
+import { getDatabaseUrl, ping } from "./db";
 
 const app = createApp();
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
-const dbUrl = getDatabaseUrl();
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`API running on ${PORT}`);
-  if (!dbUrl || !pool) {
+  const dbUrl = getDatabaseUrl();
+  if (!dbUrl) {
     // eslint-disable-next-line no-console
     console.error(
       "[db] No database URL. In Railway: Backend service → Variables → add DATABASE_URL with your Supabase URL (password: use %40 for @)."
