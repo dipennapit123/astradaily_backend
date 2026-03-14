@@ -2,9 +2,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Railway and some hosts use DATABASE_URL; Railway also exposes DATABASE_PUBLIC_URL / DATABASE_PRIVATE_URL / POSTGRES_URL
+// DATABASE_URL, SUPABASE_DB_URL (Supabase), or Railway-style URLs
 const databaseUrl =
   process.env.DATABASE_URL ||
+  process.env.SUPABASE_DB_URL ||
   process.env.DATABASE_PRIVATE_URL ||
   process.env.DATABASE_PUBLIC_URL ||
   process.env.POSTGRES_URL ||
@@ -23,6 +24,7 @@ export const env = {
 
 const hasDbUrl =
   process.env.DATABASE_URL ||
+  process.env.SUPABASE_DB_URL ||
   process.env.DATABASE_PRIVATE_URL ||
   process.env.DATABASE_PUBLIC_URL ||
   process.env.POSTGRES_URL;
